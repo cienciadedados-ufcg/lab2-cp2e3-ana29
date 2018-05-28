@@ -1,0 +1,68 @@
+---
+title: "Prob2CP3"
+author: "Ana Godoy"
+date: "5/27/2018"
+output: html_document
+---
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+library(ggplot2)
+library(plotly)
+theme_set(theme_bw())
+```
+#Os Dados 
+Os dados são referentes às eleições municipais de 2016, onde os candidatos foram convidados a responderem 14 perguntas sobre diversos temas da agenda de direitos humanos.
+Eles foram retirados do seguinte repositório (https://github.com/cienciadedados-ufcg/vis-merepresenta). que por sua vez retirou os dados do projeto #merepresenta para mais informações visite o  site (https://www.merepresenta.org.br).
+```{r}
+respostas = read_csv(here::here("data/respostas-merepresenta-2016.csv"), 
+                     col_types = cols(.default = col_character(), 
+                                      nota_partido = col_integer(), 
+                                      votos_recebidos = col_integer()))
+
+# A versão long (em vez de wide) dos dados facilita muito pro ggplot:
+respostas_long = 
+    respostas %>% 
+    gather(key = "tema", 
+           value = "resposta", 
+           10:23)
+```
+
+Para nortear a visualização dos dados teremos 4 perguntas a serem respondidas com uma análise dos mesmos.
+
+#Pergunta 1 - Candidatos do gênero feminino são mais susceptíveis  a votar sim para as causas da agenda de direitos humanos ?
+Aqui filtramos os dados por gênero e quantidade de votos para cada tema, mas como a quantidade de candidatos do sexo masculino é maior que a do sexo feminino temos uma dificuldade em visualizar a resposta para a nossa pergunta.
+```{r}
+resposta_sim = respostas_long %>%filter(resposta %in% c("S"))
+resposta_sim%>%ggplot(aes(x = tema, fill = genero)) +
+  geom_bar(position = "dodge")+ coord_flip()
+  ggplotly()
+```
+Então, calcularemos a  frequência relativa da quantidade de votos sim para cada gênero. Frequência relativa nada mais é que a porcentagem de votos em relação ao total de votos (por gênero). 
+
+```{r}
+    
+genero_avaliacao = respostas_long%>% 
+    group_by(genero) %>% 
+    summarise(genero_quant_s = sum(resposta == "S"),
+              genero_quant_n = sum(resposta == "N"))
+
+genero_avaliacao$total <- rowSums(genero_avaliacao[2:3])
+
+freq_relativa =genero_avaliacao%>% group_by(genero) %>% summarise(fqr = (genero_quant_s*100/total))
+
+
+freq_relativa%>%ggplot(aes(genero,fqr)) +
+geom_col(fill="pink")
+ggplotly()
+```
+Podemos notar que a quantidade de votos sim para as causas da agenda de direitos humanos é maior entre as candidatas. 
+
+#Pergunta 2 - 
+
+```{r}
+
+sit =  respostas_long %>%filter(situacao_candidatura!="DEFERIDO")
+
+```
